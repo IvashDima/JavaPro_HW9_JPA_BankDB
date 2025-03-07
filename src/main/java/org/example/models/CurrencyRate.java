@@ -45,7 +45,7 @@ public class CurrencyRate {
 
     @Override
     public String toString(){
-        return "Account{id="+id+", " +
+        return "CurrencyRate{id="+id+", " +
                 "currency='"+currency+"', " +
                 "currencyRate="+currencyRate+", " +
                 "}";

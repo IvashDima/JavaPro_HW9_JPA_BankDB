@@ -10,9 +10,14 @@ public abstract class AbstractDAO<T> {
     private static final String NAME = "JPATest";
     private static EntityManagerFactory emf = Persistence.createEntityManagerFactory(NAME);
     protected static EntityManager em;
+    private final Class<T> entityClass;
+
+    public AbstractDAO(Class<T> entityClass) {
+        this.entityClass = entityClass;
+        this.em = emf.createEntityManager();
+    }
 
     public void add(T entity) {
-        em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(entity);
@@ -20,12 +25,9 @@ public abstract class AbstractDAO<T> {
         } catch (Exception e) {
             em.getTransaction().rollback();
             throw new RuntimeException(e);
-        } finally {
-            em.close();
         }
     }
     public void update(T entity) {
-        em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
             em.merge(entity);
@@ -33,31 +35,26 @@ public abstract class AbstractDAO<T> {
         } catch (Exception e) {
             em.getTransaction().rollback();
             throw new RuntimeException(e);
-        } finally {
-            em.close();
         }
     }
     public T getById(Class<T> cls, Object id) {
-        em = emf.createEntityManager();
-        try {
-            return em.find(cls, id);
-        } finally {
-            em.close();
-        }
+        return em.find(cls, id);
     }
     public List<T> viewAll(Class<T> cls) {
-        em = emf.createEntityManager();
-        try {
-            Query query = em.createQuery("SELECT c FROM "+cls.getSimpleName()+" c", cls); //"FROM " + cls.getSimpleName(), cls);
-            List<T> res =  (List<T>) query.getResultList();
-            for (T t : res)
-                System.out.println(t);
-            return res;
-        } finally {
+        Query query = em.createQuery("SELECT c FROM "+cls.getSimpleName()+" c", cls); //"FROM " + cls.getSimpleName(), cls);
+        List<T> res =  (List<T>) query.getResultList();
+        for (T t : res)
+            System.out.println(t);
+        return res;
+    }
+    public void close() {
+        if (em.isOpen()) {
             em.close();
         }
     }
     public static void closeFactory() {
-        emf.close();
+        if (emf.isOpen()) {
+            emf.close();
+        }
     }
 }
