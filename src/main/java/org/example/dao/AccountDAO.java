@@ -15,8 +15,6 @@ public class AccountDAO extends AbstractDAO<Account> {
                     "SELECT a FROM Account a WHERE a.user = : user", Account.class);
             query.setParameter("user", user);
             List<Account> res = query.getResultList();
-            for (Account acc : res)
-                System.out.println(acc);
             return res;
     }
 }

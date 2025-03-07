@@ -70,7 +70,7 @@ public class Account {
         return "Account{id="+id+", " +
                 "user='"+user.getName()+"', " +
                 "balance="+balance+", " +
-                "currency="+currency+", " +
+                "currency="+currency+
                 "}";
     }
 }

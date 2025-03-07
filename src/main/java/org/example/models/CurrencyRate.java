@@ -17,12 +17,12 @@ public class CurrencyRate {
     private CurrencyType currency;
 
     @Column(nullable = false)
-    private double currencyRate;
+    private double rate;
 
     public CurrencyRate(){}
 
-    public CurrencyRate(CurrencyType currency, double currencyRate){
-        this.currencyRate = currencyRate;
+    public CurrencyRate(CurrencyType currency, double rate){
+        this.rate = rate;
         this.currency = currency;
     }
 
@@ -35,19 +35,19 @@ public class CurrencyRate {
     public void setCurrency(CurrencyType currency) {
         this.currency = currency;
     }
-    public double getCurrencyRate() {
-        return currencyRate;
+    public double getRate() {
+        return rate;
     }
 
-    public void setCurrencyRate(double currencyRate) {
-        this.currencyRate = currencyRate;
+    public void setRate(double rate) {
+        this.rate = rate;
     }
 
     @Override
     public String toString(){
         return "CurrencyRate{id="+id+", " +
                 "currency='"+currency+"', " +
-                "currencyRate="+currencyRate+", " +
+                "rate="+rate+", " +
                 "}";
     }
 }

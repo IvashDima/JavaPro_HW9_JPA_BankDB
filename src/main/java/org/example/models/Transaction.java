@@ -73,8 +73,8 @@ public class Transaction {
     @Override
     public String toString(){
         return "Transaction{id="+id+", " +
-                "sender="+senderAccount+", " +
-                "receiver="+receiverAccount.getId()+", " +
+                "senderAccount="+senderAccount+", " +
+                "receiverAccount="+receiverAccount+", " +
                 "amount="+amount+", " +
                 "type="+type+
                 "}";

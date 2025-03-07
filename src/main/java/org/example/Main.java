@@ -26,6 +26,9 @@ public class Main {
         TransactionDAO transactionDAO = new TransactionDAO();
         CurrencyRateDAO currencyRateDAO = new CurrencyRateDAO();
 
+        insertCurrencyRate(currencyRateDAO);
+        currencyRateDAO.viewAll(CurrencyRate.class);
+
         Scanner sc = new Scanner(System.in);
         try{
             while (true) {
@@ -34,9 +37,9 @@ public class Main {
                 System.out.println("3: view users");
                 System.out.println("4: add accounts manually");
                 System.out.println("5: view accounts");
-                System.out.println("6: update account (deposit)");
-                System.out.println("7: update account (transfer)");
-                System.out.println("8: convert by currency rate");
+                System.out.println("6: deposit account");
+                System.out.println("7: transfer between accounts (in one currency)");
+                System.out.println("8: transfer with convertion by currency rate");
                 System.out.println("9: total balance");
                 System.out.println("0: exit");
                 System.out.print("-> ");
@@ -47,8 +50,6 @@ public class Main {
                         User user = insertRandomUser(userDAO);
                         insertAccounts(accountDAO,user);
                         accountDAO.viewAll(Account.class);
-                        insertCurrencyRate(currencyRateDAO);
-                        currencyRateDAO.viewAll(CurrencyRate.class);
                         break;
                     case "2":
                         addUser(userDAO, sc);
@@ -66,10 +67,10 @@ public class Main {
                         deposit(accountDAO, transactionDAO, sc);
                         break;
                     case "7":
-                        transfer(accountDAO, transactionDAO, sc);
+                        transferWithoutConvert(accountDAO, transactionDAO, sc);
                         break;
                     case "8":
-                        convert(userDAO, accountDAO, transactionDAO, sc);
+                        transferWithConvert(currencyRateDAO, userDAO, accountDAO, transactionDAO, sc);
                         break;
                     case "9":
 //                        totalsum(userDAO, transactionDAO, sc);
@@ -175,16 +176,24 @@ public class Main {
         transactionDAO.add(trn);
         System.out.println("Transaction was added: " + trn);
     }
-    private static void transfer(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
+    private static void transferWithoutConvert(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
+        System.out.println("The conversion will not be performed! You choose transfer in one currency.");
         System.out.print("Enter sender account id: ");
         String sSenderAccountId = sc.nextLine();
         long senderAccountId = Long.parseLong(sSenderAccountId);
         Account accSender = accountDAO.getById(Account.class,senderAccountId);
 
-        System.out.print("Enter receiver account id: ");
-        String sReceiverAccountId = sc.nextLine();
-        long receiverAccountId = Long.parseLong(sReceiverAccountId);
-        Account accReceiver = accountDAO.getById(Account.class,receiverAccountId);
+        Account accReceiver = null;
+        do {
+            System.out.print("Enter receiver account id (with the same currency): ");
+            String sReceiverAccountId = sc.nextLine();
+            long receiverAccountId = Long.parseLong(sReceiverAccountId);
+            accReceiver = accountDAO.getById(Account.class,receiverAccountId);
+            if (accReceiver.getCurrency() != accSender.getCurrency()) {
+                System.out.println("Error: incorrect account. Choose account with the same currency!");
+                accountDAO.viewAll(Account.class);
+            }
+        }while (accReceiver.getCurrency() != accSender.getCurrency());
 
         System.out.print("Enter amount: ");
         String sAmount = sc.nextLine();
@@ -202,17 +211,70 @@ public class Main {
         transactionDAO.add(trn);
         System.out.println("Transaction was added: " + trn);
     }
-    private static void convert(UserDAO userDAO,AccountDAO accountDAO, TransactionDAO transactionDAO, Scanner sc) {
+    private static void transferWithConvert(CurrencyRateDAO currencyRateDAO, UserDAO userDAO,AccountDAO accountDAO, TransactionDAO transactionDAO, Scanner sc) {
         System.out.print("Enter user id: ");
         String sUserId = sc.nextLine();
         long userId = Long.parseLong(sUserId);
         User usr = userDAO.getById(User.class,userId);
 
-//        List<Account> userAccounts = accountDAO.viewAccountsByUser(usr);
         List<Account> userAccounts = accountDAO.viewAccountsByUser(usr);
         for (Account acc: userAccounts)
             System.out.println(acc);
 
+        Account accSender = null;
+        do {
+            System.out.print("Enter sender account id: ");
+            String sSenderAccountId = sc.nextLine();
+            long senderAccountId = Long.parseLong(sSenderAccountId);
+            accSender = accountDAO.getById(Account.class,senderAccountId);
+            if (accSender.getUser() != usr || accSender.getUser() == null) {
+                System.out.println("Error: incorrect account. Try again.");
+            }
+        }while (accSender.getUser() != usr || accSender.getUser() == null);
+
+        Account accReceiver = null;
+        do {
+            System.out.print("Enter receiver account id: ");
+            String sReceiverAccountId = sc.nextLine();
+            long receiverAccountId = Long.parseLong(sReceiverAccountId);
+            accReceiver = accountDAO.getById(Account.class,receiverAccountId);
+            if (accReceiver.getUser() != usr || accReceiver.getUser() == null) {
+                System.out.println("Error: incorrect account. Try again.");
+            }
+        }while (accReceiver.getUser() != usr || accReceiver.getUser() == null);
+
+        System.out.println("The conversion will be performed at the exchange rate of the recipient's account currency!");
+        System.out.print("Enter amount to transfer from sender account: ");
+        String sAmount = sc.nextLine();
+        double amount = Double.parseDouble(sAmount);
+
+        double amountInBaseCurrency = convertionByRate(currencyRateDAO, accSender, amount, true);
+        double amountInCurrencyReceiver = convertionByRate(currencyRateDAO, accReceiver, amountInBaseCurrency, false);
+
+
+        accSender.withdraw(amount);
+        accountDAO.update(accSender);
+        System.out.println("New balance of sender account = "+accSender.getBalance());
+
+        accReceiver.deposit(amountInCurrencyReceiver);
+        accountDAO.update(accReceiver);
+        System.out.println("New balance of receiver account = "+accReceiver.getBalance());
+
+        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.convert);
+        transactionDAO.add(trn);
+        System.out.println("Transaction was added: " + trn);
+    }
+    private static double convertionByRate(CurrencyRateDAO currencyRateDAO, Account acc, double amount, boolean toBaseCurrency){
+        CurrencyType curr =  acc.getCurrency();
+        double rate = currencyRateDAO.getRateByCurrency(curr);
+        double convertedAmount = 0;
+        if(toBaseCurrency == true){
+            convertedAmount = amount*rate;
+        }else{
+            convertedAmount = amount/rate;
+        }
+        return convertedAmount;
+    }
 //        System.out.print("Enter receiver account id: ");
 //        String sReceiverAccountId = sc.nextLine();
 //        long receiverAccountId = Long.parseLong(sReceiverAccountId);
@@ -233,7 +295,7 @@ public class Main {
 //        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.transfer);
 //        transactionDAO.add(trn);
 //        System.out.println("Transaction was added: " + trn);
-    }
+
 //    private static void totalsum(UserDAO userDAO,TransactionDAO transactionDAO, Scanner sc) {
 //        System.out.print("Enter sender account id: ");
 //        String sSenderAccountId = sc.nextLine();
