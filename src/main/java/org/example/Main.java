@@ -32,7 +32,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         try{
             while (true) {
-                System.out.println("1: insert random data");
+                System.out.println("\n1: insert random data");
                 System.out.println("2: add user manually");
                 System.out.println("3: view users");
                 System.out.println("4: add accounts manually");
@@ -73,7 +73,7 @@ public class Main {
                         transferWithConvert(currencyRateDAO, userDAO, accountDAO, transactionDAO, sc);
                         break;
                     case "9":
-//                        totalsum(userDAO, transactionDAO, sc);
+                        totalAmountByUser(currencyRateDAO, userDAO, accountDAO, transactionDAO, sc);
                         break;
                     case "0":
                         return;
@@ -141,11 +141,11 @@ public class Main {
         System.out.println("Account was added, ID = " + account.getId() + ", balance = "+account.getBalance());
     }
     private static void insertAccounts(AccountDAO accountDAO, User usr) {
-        Account accountUSD = new Account(usr, 0, CurrencyType.USD);
+        Account accountUSD = new Account(usr, 1000, CurrencyType.USD);
         accountDAO.add(accountUSD);
-        Account accountEUR = new Account(usr, 0, CurrencyType.EUR);
+        Account accountEUR = new Account(usr, 1000, CurrencyType.EUR);
         accountDAO.add(accountEUR);
-        Account accountUAH = new Account(usr, 0, CurrencyType.UAH);
+        Account accountUAH = new Account(usr, 1000, CurrencyType.UAH);
         accountDAO.add(accountUAH);
         System.out.println("Were added accounts in USD, EUR, UAH for user "+usr);
     }
@@ -275,64 +275,25 @@ public class Main {
         }
         return convertedAmount;
     }
-//        System.out.print("Enter receiver account id: ");
-//        String sReceiverAccountId = sc.nextLine();
-//        long receiverAccountId = Long.parseLong(sReceiverAccountId);
-//        Account accReceiver = accountDAO.getById(Account.class,receiverAccountId);
-//
-//        System.out.print("Enter amount: ");
-//        String sAmount = sc.nextLine();
-//        double amount = Double.parseDouble(sAmount);
-//
-//        accSender.withdraw(amount);
-//        accountDAO.update(accSender);
-//        System.out.println("New balance of sender = "+accSender.getBalance());
-//
-//        accReceiver.deposit(amount);
-//        accountDAO.update(accReceiver);
-//        System.out.println("New balance of receiver = "+accReceiver.getBalance());
-//
-//        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.transfer);
-//        transactionDAO.add(trn);
-//        System.out.println("Transaction was added: " + trn);
+    private static void totalAmountByUser(CurrencyRateDAO currencyRateDAO, UserDAO userDAO,AccountDAO accountDAO, TransactionDAO transactionDAO, Scanner sc) {
+        System.out.print("Enter user id: ");
+        String sUserId = sc.nextLine();
+        long userId = Long.parseLong(sUserId);
+        User usr = userDAO.getById(User.class,userId);
 
-//    private static void totalsum(UserDAO userDAO,TransactionDAO transactionDAO, Scanner sc) {
-//        System.out.print("Enter sender account id: ");
-//        String sSenderAccountId = sc.nextLine();
-//        long senderAccountId = Long.parseLong(sSenderAccountId);
-//        Account accSender = accountDAO.getById(Account.class,senderAccountId);
-//
-//        CurrencyType currency = null;
-//        while (currency == null) {
-//            System.out.print("Enter currency (USD, EUR, UAH): ");
-//            String sCurrency = sc.nextLine();
-//            currency = CurrencyType.fromString(sCurrency);
-//            if (currency == null) {
-//                System.out.println("Error: incorrect value. Try again.");
-//            }
-//        }
-//
-//        System.out.print("Enter receiver account id: ");
-//        String sReceiverAccountId = sc.nextLine();
-//        long receiverAccountId = Long.parseLong(sReceiverAccountId);
-//        Account accReceiver = accountDAO.getById(Account.class,receiverAccountId);
-//
-//        System.out.print("Enter amount: ");
-//        String sAmount = sc.nextLine();
-//        double amount = Double.parseDouble(sAmount);
-//
-//        accSender.withdraw(amount);
-//        accountDAO.update(accSender);
-//        System.out.println("New balance of sender = "+accSender.getBalance());
-//
-//        accReceiver.deposit(amount);
-//        accountDAO.update(accReceiver);
-//        System.out.println("New balance of receiver = "+accReceiver.getBalance());
-//
-//        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.transfer);
-//        transactionDAO.add(trn);
-//        System.out.println("Transaction was added: " + trn);
-//    }
+        double total = 0;
+        List<Account> userAccounts = accountDAO.viewAccountsByUser(usr);
+        for (Account acc: userAccounts){
+            System.out.println(acc);
+            if(acc.getCurrency()== CurrencyType.UAH){
+                total += acc.getBalance();
+            } else {
+                total += convertionByRate(currencyRateDAO, acc, acc.getBalance(), true);
+            }
+        }
+
+        System.out.println("Total amount by "+usr.getName()+" at the base rate (UAH) on all accounts is "+ total);
+    }
 
     static final String[] NAMES = {"Dima", "Alex", "Ivan", "Petro", "John", "Martin"};
     static final Random RND = new Random();

@@ -47,7 +47,7 @@ public class CurrencyRate {
     public String toString(){
         return "CurrencyRate{id="+id+", " +
                 "currency='"+currency+"', " +
-                "rate="+rate+", " +
+                "rate="+rate+
                 "}";
     }
 }
