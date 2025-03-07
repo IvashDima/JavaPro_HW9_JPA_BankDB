@@ -11,7 +11,9 @@ import org.example.dao.TransactionDAO;
 import org.example.dao.CurrencyRateDAO;
 import org.example.dao.UserDAO;
 import org.example.enums.CurrencyType;
+import org.example.enums.TransactionType;
 import org.example.models.Account;
+import org.example.models.Transaction;
 import org.example.models.User;
 
 import java.util.Random;
@@ -33,7 +35,7 @@ public class Main {
                 System.out.println("3: view users");
                 System.out.println("4: add accounts manually");
                 System.out.println("5: view accounts");
-                System.out.println("6: update account (top up the balance)");
+                System.out.println("6: update account (deposit)");
 //                System.out.println("7: add order");
 //                System.out.println("8: view orders");
                 System.out.print("-> ");
@@ -41,7 +43,7 @@ public class Main {
                 String s = sc.nextLine();
                 switch (s) {
                     case "1":
-                        insertRandomUsers(userDAO, sc);
+//                        insertRandomUsers(userDAO, sc);
                         User user = new User("Dima");
                         userDAO.add(user);
                         insertAccounts(accountDAO,user,sc);
@@ -59,7 +61,7 @@ public class Main {
                         accountDAO.viewAll(Account.class);
                         break;
                     case "6":
-                        updateAccount(accountDAO, sc);
+                        updateAccount(accountDAO, transactionDAO, sc);
                         break;
                     default:
                         return;
@@ -122,19 +124,23 @@ public class Main {
         Account accountUAH = new Account(usr, 0, CurrencyType.UAH);
         accountDAO.add(accountUAH);
     }
-    private static void updateAccount(AccountDAO accountDAO, Scanner sc) {
+    private static void updateAccount(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
         System.out.print("Enter account id: ");
         String sAccountId = sc.nextLine();
         long accountId = Long.parseLong(sAccountId);
         Account account = accountDAO.getById(Account.class,accountId);
 
         System.out.print("Enter balance: ");
-        String sBalance = sc.nextLine();
-        double balance = Double.parseDouble(sBalance);
+        String sAmount = sc.nextLine();
+        double amount = Double.parseDouble(sAmount);
 
-        account.updateBalance(balance);
+        account.updateBalance(amount);
         accountDAO.update(account);
         System.out.println("New balance = "+account.getBalance());
+
+        Transaction trn = new Transaction(null, account, amount, TransactionType.deposit);
+        transactionDAO.add(trn);
+        System.out.println("Transaction was added: " + trn);
     }
 
     static final String[] NAMES = {"Dima", "Alex", "Ivan", "Petro", "John", "Martin"};
