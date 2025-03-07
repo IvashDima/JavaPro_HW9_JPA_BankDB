@@ -3,7 +3,6 @@ package org.example.dao;
 import org.example.enums.CurrencyType;
 import org.example.models.CurrencyRate;
 
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
 

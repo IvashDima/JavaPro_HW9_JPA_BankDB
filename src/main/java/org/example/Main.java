@@ -1,9 +1,3 @@
-
-//> * Создать базу данных «Банк» с таблицами «Пользователи», «Транзакции», «Счета» и «Курсы валют». Счет бывает 3-х видов:
-//        USD, EUR, UAH. Написать запросы для пополнения счета в нужной валюте, перевода средств с одного счета на другой,
-//        конвертации валюты по курсу в рамках счетов одного пользователя. Написать запрос для получения суммарных средств
-//        на счету одного пользователя в UAH (расчет по курсу).
-
 package org.example;
 
 import org.example.dao.*;
@@ -98,18 +92,6 @@ public class Main {
         User usr = new User(name);
         userDAO.add(usr);
         System.out.println("User was added, ID = " + usr.getId() + ", name = "+usr.getName());
-    }
-    private static void insertRandomUsers(UserDAO userDAO, Scanner sc) {
-        System.out.print("Enter users count: ");
-        String sCount = sc.nextLine();
-        int count = Integer.parseInt(sCount);
-
-        System.out.println("Were added users:");
-        for (int i = 0; i < count; i++) {
-            User usr = new User(randomName());
-            userDAO.add(usr);
-            System.out.println("ID = " + usr.getId() + ", name = "+usr.getName());
-        }
     }
     private static User insertRandomUser(UserDAO userDAO) {
         User usr = new User(randomName());
