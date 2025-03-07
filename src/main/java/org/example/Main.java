@@ -6,10 +6,7 @@
 
 package org.example;
 
-import org.example.dao.AccountDAO;
-import org.example.dao.TransactionDAO;
-import org.example.dao.CurrencyRateDAO;
-import org.example.dao.UserDAO;
+import org.example.dao.*;
 import org.example.enums.CurrencyType;
 import org.example.enums.TransactionType;
 import org.example.models.Account;
@@ -37,7 +34,9 @@ public class Main {
                 System.out.println("5: view accounts");
                 System.out.println("6: update account (deposit)");
                 System.out.println("7: update account (transfer)");
-//                System.out.println("8: view orders");
+                System.out.println("8: convert by currency rate");
+                System.out.println("9: total balance");
+                System.out.println("0: exit");
                 System.out.print("-> ");
 
                 String s = sc.nextLine();
@@ -61,19 +60,28 @@ public class Main {
                         accountDAO.viewAll(Account.class);
                         break;
                     case "6":
-                        depositAccount(accountDAO, transactionDAO, sc);
+                        deposit(accountDAO, transactionDAO, sc);
                         break;
                     case "7":
-                        transferAccount(accountDAO, transactionDAO, sc);
+                        transfer(accountDAO, transactionDAO, sc);
                         break;
-                    default:
+                    case "8":
+                        convert(userDAO, transactionDAO, sc);
+                        break;
+                    case "9":
+                        totalsum(userDAO, transactionDAO, sc);
+                        break;
+                    case "0":
                         return;
+                    default:
+                        System.out.println("Try again!");
                 }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("End of program!");
         }
+        AbstractDAO.closeFactory();
     }
     private static void addUser(UserDAO userDAO, Scanner sc) {
         System.out.print("Enter client name: ");
@@ -127,7 +135,7 @@ public class Main {
         Account accountUAH = new Account(usr, 0, CurrencyType.UAH);
         accountDAO.add(accountUAH);
     }
-    private static void depositAccount(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
+    private static void deposit(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
         System.out.print("Enter account id: ");
         String sAccountId = sc.nextLine();
         long accountId = Long.parseLong(sAccountId);
@@ -145,7 +153,61 @@ public class Main {
         transactionDAO.add(trn);
         System.out.println("Transaction was added: " + trn);
     }
-    private static void transferAccount(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
+    private static void transfer(AccountDAO accountDAO,TransactionDAO transactionDAO, Scanner sc) {
+        System.out.print("Enter sender account id: ");
+        String sSenderAccountId = sc.nextLine();
+        long senderAccountId = Long.parseLong(sSenderAccountId);
+        Account accSender = accountDAO.getById(Account.class,senderAccountId);
+
+        System.out.print("Enter receiver account id: ");
+        String sReceiverAccountId = sc.nextLine();
+        long receiverAccountId = Long.parseLong(sReceiverAccountId);
+        Account accReceiver = accountDAO.getById(Account.class,receiverAccountId);
+
+        System.out.print("Enter amount: ");
+        String sAmount = sc.nextLine();
+        double amount = Double.parseDouble(sAmount);
+
+        accSender.withdraw(amount);
+        accountDAO.update(accSender);
+        System.out.println("New balance of sender = "+accSender.getBalance());
+
+        accReceiver.deposit(amount);
+        accountDAO.update(accReceiver);
+        System.out.println("New balance of receiver = "+accReceiver.getBalance());
+
+        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.transfer);
+        transactionDAO.add(trn);
+        System.out.println("Transaction was added: " + trn);
+    }
+    private static void convert(UserDAO userDAO,TransactionDAO transactionDAO, Scanner sc) {
+        System.out.print("Enter user id: ");
+        String sUserId = sc.nextLine();
+        long userId = Long.parseLong(sUserId);
+        User usr = userDAO.getById(User.class,userId);
+
+        System.out.print("Enter receiver account id: ");
+        String sReceiverAccountId = sc.nextLine();
+        long receiverAccountId = Long.parseLong(sReceiverAccountId);
+        Account accReceiver = accountDAO.getById(Account.class,receiverAccountId);
+
+        System.out.print("Enter amount: ");
+        String sAmount = sc.nextLine();
+        double amount = Double.parseDouble(sAmount);
+
+        accSender.withdraw(amount);
+        accountDAO.update(accSender);
+        System.out.println("New balance of sender = "+accSender.getBalance());
+
+        accReceiver.deposit(amount);
+        accountDAO.update(accReceiver);
+        System.out.println("New balance of receiver = "+accReceiver.getBalance());
+
+        Transaction trn = new Transaction(accSender, accReceiver, amount, TransactionType.transfer);
+        transactionDAO.add(trn);
+        System.out.println("Transaction was added: " + trn);
+    }
+    private static void totalsum(UserDAO userDAO,TransactionDAO transactionDAO, Scanner sc) {
         System.out.print("Enter sender account id: ");
         String sSenderAccountId = sc.nextLine();
         long senderAccountId = Long.parseLong(sSenderAccountId);
