@@ -41,7 +41,7 @@ public abstract class AbstractDAO<T> {
         return em.find(cls, id);
     }
     public List<T> viewAll(Class<T> cls) {
-        Query query = em.createQuery("SELECT c FROM "+cls.getSimpleName()+" c", cls); //"FROM " + cls.getSimpleName(), cls);
+        Query query = em.createQuery("SELECT c FROM "+cls.getSimpleName()+" c", cls);
         List<T> res =  (List<T>) query.getResultList();
         for (T t : res)
             System.out.println(t);

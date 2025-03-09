@@ -3,6 +3,8 @@ package org.example.models;
 import org.example.enums.CurrencyType;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "Accounts")
@@ -22,6 +24,12 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CurrencyType currency;
+
+    @OneToMany(mappedBy = "senderAccount", cascade = CascadeType.ALL)
+    private List<Transaction> sTransactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiverAccount", cascade = CascadeType.ALL)
+    private List<Transaction> rTransactions = new ArrayList<>();
 
     public Account(){}
 
